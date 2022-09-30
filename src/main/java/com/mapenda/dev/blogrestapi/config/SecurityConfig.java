@@ -3,6 +3,7 @@ package com.mapenda.dev.blogrestapi.config;
 import com.mapenda.dev.blogrestapi.security.CustomUserDetailsService;
 import com.mapenda.dev.blogrestapi.security.JwtAuthenticationEntryPoint;
 import com.mapenda.dev.blogrestapi.security.JwtAuthenticationFilter;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,11 +19,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
@@ -40,8 +40,8 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
                 .exceptionHandling()
@@ -61,18 +61,25 @@ public class SecurityConfig {
                 .anyRequest()
                 .authenticated();
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
     }
 
-    @Bean
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder());
     }
 
-
+    @Override
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
-        return authenticationManagerBean();
+        return super.authenticationManagerBean();
     }
+
+
+    @Bean
+    public ModelMapper ModelMapperBean()  {
+        return new ModelMapper();
+    }
+
+
 }
